@@ -336,7 +336,7 @@ function updateUI() {
   document.getElementById("statRest").textContent = fmt(config.rest);
   document.getElementById("statRounds").textContent = config.rounds;
   // Total y restante
-  const totalSecs = (config.work + config.rest) * config.rounds - config.rest;
+  const totalSecs = config.work * config.rounds + config.rest * (config.rounds - 1);
   document.getElementById("statTotal").textContent = fmt(totalSecs);
   let remaining;
   if (state.phase === "idle") {
@@ -344,13 +344,16 @@ function updateUI() {
   } else if (state.phase === "done") {
     remaining = 0;
   } else if (state.phase === "work") {
-    // Tiempo que queda en este trabajo + rondas completas restantes (trabajo+descanso) - último descanso
-    const roundsLeft = config.rounds - state.round;
-    remaining = state.timeLeft + roundsLeft * (config.work + config.rest) - (roundsLeft > 0 ? config.rest : 0);
+    // Tiempo restante de esta ronda de trabajo
+    // + (rondas que faltan por empezar) * (descanso + trabajo)
+    const rondasPorEmpezar = config.rounds - state.round;
+    remaining = state.timeLeft + rondasPorEmpezar * (config.rest + config.work);
   } else { // rest
-    // Tiempo que queda en este descanso + rondas completas restantes
-    const roundsLeft = config.rounds - state.round;
-    remaining = state.timeLeft + config.work + (roundsLeft > 0 ? roundsLeft * (config.work + config.rest) - config.rest : 0);
+    // Tiempo restante de este descanso
+    // + trabajo de la siguiente ronda
+    // + (rondas que faltan después de la siguiente) * (descanso + trabajo)
+    const rondasPorEmpezar = config.rounds - state.round - 1;
+    remaining = state.timeLeft + config.work + rondasPorEmpezar * (config.rest + config.work);
   }
   document.getElementById("statRemaining").textContent = fmt(Math.max(0, remaining));
   // Dots
