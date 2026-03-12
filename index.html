@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gym Timer">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<title>GYM TIMER PRO</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    background: #0a0a0a;
+    font-family: 'Bebas Neue', Impact, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 16px;
+    background-image: radial-gradient(ellipse at 50% 0%, rgba(255,59,48,0.08) 0%, transparent 60%);
+    color: #fff;
+  }
+  button { cursor: pointer; border: none; outline: none; font-family: 'Bebas Neue', sans-serif; }
+  input[type=number] { -moz-appearance: textfield; }
+  input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.03)} }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .running-pulse { animation: pulse 1s infinite; }
+  .fade-in { animation: fadeIn 0.3s ease; }
+
+  .header { text-align: center; margin-bottom: 24px; }
+  .header-sub { font-size: 11px; letter-spacing: 6px; color: #636366; font-family: 'DM Mono', monospace; margin-bottom: 4px; }
+  .header-title { font-size: 38px; letter-spacing: 4px; color: #fff; line-height: 1; }
+
+  .presets { display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; justify-content: center; }
+  .preset-btn {
+    padding: 8px 18px; border-radius: 6px; font-size: 15px; letter-spacing: 2px;
+    transition: all 0.2s;
+  }
+
+  .timer-wrap { position: relative; margin-bottom: 24px; }
+  .timer-inner {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    border-radius: 50%; transition: background 0.4s ease;
+  }
+  .phase-label { font-size: 11px; letter-spacing: 5px; font-family: 'DM Mono', monospace; margin-bottom: 4px; transition: color 0.4s; }
+  .time-display { font-size: 72px; color: #fff; line-height: 1; letter-spacing: 2px; }
+  .round-info { font-size: 13px; color: #636366; font-family: 'DM Mono', monospace; margin-top: 6px; }
+
+  .dots { display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; justify-content: center; }
+  .dot { border-radius: 50%; transition: all 0.3s; }
+
+  .stats { display: flex; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; justify-content: center; }
+  .stat-box {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px; padding: 12px 18px; text-align: center; min-width: 80px;
+  }
+  .stat-label { font-size: 9px; letter-spacing: 3px; color: #636366; font-family: 'DM Mono', monospace; margin-bottom: 4px; }
+  .stat-val { font-size: 24px; letter-spacing: 2px; }
+
+  .controls { display: flex; gap: 12px; margin-bottom: 20px; }
+  .btn-main {
+    padding: 16px 48px; font-size: 22px; letter-spacing: 4px; border-radius: 10px;
+    transition: transform 0.1s;
+  }
+  .btn-main:active { transform: scale(0.97); }
+  .btn-reset {
+    padding: 16px 20px; background: rgba(255,255,255,0.04); color: #636366;
+    font-size: 22px; letter-spacing: 3px; border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .config-toggle {
+    background: none; color: #636366; font-size: 11px;
+    letter-spacing: 3px; font-family: 'DM Mono', monospace; margin-bottom: 12px;
+  }
+  .config-panel {
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px; padding: 20px; width: 100%; max-width: 340px;
+    display: none;
+  }
+  .config-panel.open { display: block; }
+  .config-row { margin-bottom: 14px; }
+  .config-label { font-size: 10px; letter-spacing: 3px; color: #636366; font-family: 'DM Mono', monospace; margin-bottom: 6px; }
+  .config-controls { display: flex; align-items: center; gap: 10px; }
+  .config-btn {
+    width: 36px; height: 36px; border-radius: 8px; background: rgba(255,255,255,0.05);
+    color: #fff; font-size: 18px; border: 1px solid rgba(255,255,255,0.1);
+  }
+  .config-val {
+    flex: 1; background: rgba(255,255,255,0.05); border-radius: 8px;
+    color: inherit; font-size: 24px; text-align: center; padding: 6px;
+    font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px;
+    pointer-events: none; border: 1px solid transparent;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-sub">GYM TIMER PRO</div>
+  <div class="header-title">INTERVAL TRAINER</div>
+</div>
+
+<div class="presets" id="presets"></div>
+
+<div class="timer-wrap" id="timerWrap">
+  <svg id="timerSvg" width="260" height="260" style="transform:rotate(-90deg)">
+    <circle cx="130" cy="130" r="110" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10"/>
+    <circle id="progressArc" cx="130" cy="130" r="110" fill="none" stroke="#FF3B30"
+      stroke-width="10" stroke-linecap="round"
+      stroke-dasharray="691.15" stroke-dashoffset="691.15"
+      style="transition: stroke-dashoffset 0.9s linear, stroke 0.4s ease; filter: drop-shadow(0 0 8px #FF3B30)"/>
+  </svg>
+  <div class="timer-inner" id="timerInner">
+    <div class="phase-label" id="phaseLabel" style="color:#636366">LISTO</div>
+    <div class="time-display" id="timeDisplay">00:40</div>
+    <div class="round-info" id="roundInfo">RONDA 1 / 8</div>
+  </div>
+</div>
+
+<div class="dots" id="dots"></div>
+
+<div class="stats" id="stats">
+  <div class="stat-box">
+    <div class="stat-label">TRABAJO</div>
+    <div class="stat-val" style="color:#FF3B30" id="statWork">00:40</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-label">DESCANSO</div>
+    <div class="stat-val" style="color:#34C759" id="statRest">00:20</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-label">RONDAS</div>
+    <div class="stat-val" style="color:#007AFF" id="statRounds">8</div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn-main" id="mainBtn" onclick="handleMain()"
+    style="background:#FF3B30;color:#fff;box-shadow:0 0 30px rgba(255,59,48,0.4)">
+    INICIAR
+  </button>
+  <button class="btn-reset" onclick="handleReset()">↺</button>
+</div>
+
+<button class="config-toggle" onclick="toggleConfig()">▼ CONFIGURAR</button>
+
+<div class="config-panel" id="configPanel">
+  <div class="config-row">
+    <div class="config-label">⚡ TRABAJO (seg)</div>
+    <div class="config-controls">
+      <button class="config-btn" onclick="adjust('work',-5)">−</button>
+      <div class="config-val" style="color:#FF3B30;border-color:rgba(255,59,48,0.2)" id="cfgWork">40</div>
+      <button class="config-btn" onclick="adjust('work',5)">+</button>
+    </div>
+  </div>
+  <div class="config-row">
+    <div class="config-label">💚 DESCANSO (seg)</div>
+    <div class="config-controls">
+      <button class="config-btn" onclick="adjust('rest',-5)">−</button>
+      <div class="config-val" style="color:#34C759;border-color:rgba(52,199,89,0.2)" id="cfgRest">20</div>
+      <button class="config-btn" onclick="adjust('rest',5)">+</button>
+    </div>
+  </div>
+  <div class="config-row">
+    <div class="config-label">🔁 RONDAS</div>
+    <div class="config-controls">
+      <button class="config-btn" onclick="adjust('rounds',-1)">−</button>
+      <div class="config-val" style="color:#007AFF;border-color:rgba(0,122,255,0.2)" id="cfgRounds">8</div>
+      <button class="config-btn" onclick="adjust('rounds',1)">+</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const PRESETS = [
+  { name: "HIIT",    work: 40, rest: 20, rounds: 8,  color: "#FF3B30" },
+  { name: "Tabata",  work: 20, rest: 10, rounds: 8,  color: "#FF9500" },
+  { name: "Boxing",  work: 180,rest: 60, rounds: 5,  color: "#34C759" },
+  { name: "Custom",  work: 30, rest: 15, rounds: 10, color: "#007AFF" },
+];
+
+let config = { work: 40, rest: 20, rounds: 8 };
+let state = { phase: "idle", timeLeft: 40, round: 1 };
+let running = false;
+let interval = null;
+let activePreset = "HIIT";
+const CIRC = 2 * Math.PI * 110;
+
+function fmt(s) {
+  return String(Math.floor(s/60)).padStart(2,"0") + ":" + String(s%60).padStart(2,"0");
+}
+
+let audioCtx = null;
+
+function getAudioCtx() {
+  if (!audioCtx || audioCtx.state === 'closed') {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function beep(freq=880, dur=0.1, vol=0.3) {
+  try {
+    const ctx = getAudioCtx();
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = freq;
+    const t = ctx.currentTime;
+    g.gain.setValueAtTime(vol, t);
+    g.gain.setValueAtTime(vol, t + Math.max(dur - 0.05, 0.01));
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.start(t); o.stop(t + dur);
+  } catch(e){}
+}
+
+function beepRest() {
+  try {
+    const ctx = getAudioCtx();
+    const notes = [523, 659, 784]; // Do-Mi-Sol, acorde alegre ascendente
+    notes.forEach((freq, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'sine';
+      const t = ctx.currentTime + i * 0.28;
+      o.frequency.value = freq;
+      g.gain.setValueAtTime(0.0, t);
+      g.gain.linearRampToValueAtTime(0.6, t + 0.05);
+      g.gain.setValueAtTime(0.6, t + 0.5);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 1.0);
+      o.start(t); o.stop(t + 1.0);
+    });
+  } catch(e){}
+}
+
+function renderPresets() {
+  const el = document.getElementById("presets");
+  el.innerHTML = PRESETS.map(p => `
+    <button class="preset-btn" id="preset-${p.name}" onclick="selectPreset('${p.name}')"
+      style="background:${activePreset===p.name?p.color:'rgba(255,255,255,0.05)'};
+             color:${activePreset===p.name?'#000':'#888'};
+             border:1px solid ${activePreset===p.name?p.color:'rgba(255,255,255,0.1)'}">
+      ${p.name}
+    </button>`).join("");
+}
+
+function renderDots() {
+  const el = document.getElementById("dots");
+  const phaseColor = getPhaseColor();
+  el.innerHTML = Array.from({length: config.rounds}).map((_, i) => {
+    const done = i < state.round - 1;
+    const active = i === state.round - 1 && state.phase !== "idle" && state.phase !== "done";
+    const size = active ? 14 : 10;
+    const bg = done || active ? phaseColor : "rgba(255,255,255,0.12)";
+    const shadow = active ? `0 0 8px ${phaseColor}` : "none";
+    return `<div class="dot" style="width:${size}px;height:${size}px;background:${bg};box-shadow:${shadow}"></div>`;
+  }).join("");
+}
+
+function getPhaseColor() {
+  if (state.phase === "work") return "#FF3B30";
+  if (state.phase === "rest") return "#34C759";
+  if (state.phase === "done") return "#FFD60A";
+  return "#636366";
+}
+
+function getPhaseLabel() {
+  if (state.phase === "work") return "TRABAJA";
+  if (state.phase === "rest") return "DESCANSA";
+  if (state.phase === "done") return "¡LISTO!";
+  return "LISTO";
+}
+
+function getPhaseBg() {
+  if (state.phase === "work") return "rgba(255,59,48,0.12)";
+  if (state.phase === "rest") return "rgba(52,199,89,0.12)";
+  return "rgba(99,99,102,0.08)";
+}
+
+function updateUI() {
+  const color = getPhaseColor();
+  // Arc
+  const total = state.phase === "work" ? config.work : state.phase === "rest" ? config.rest : config.work;
+  const elapsed = total - state.timeLeft;
+  const progress = state.phase === "idle" ? 0 : (elapsed / total);
+  const arc = document.getElementById("progressArc");
+  arc.style.strokeDashoffset = CIRC - progress * CIRC;
+  arc.style.stroke = color;
+  arc.style.filter = `drop-shadow(0 0 8px ${color})`;
+  // Labels
+  document.getElementById("phaseLabel").textContent = getPhaseLabel();
+  document.getElementById("phaseLabel").style.color = color;
+  document.getElementById("timeDisplay").textContent = fmt(state.timeLeft);
+  document.getElementById("roundInfo").textContent = `RONDA ${state.round} / ${config.rounds}`;
+  document.getElementById("timerInner").style.background = getPhaseBg();
+  // Pulse
+  const wrap = document.getElementById("timerWrap");
+  if (running && state.phase === "work") wrap.classList.add("running-pulse");
+  else wrap.classList.remove("running-pulse");
+  // Stats
+  document.getElementById("statWork").textContent = fmt(config.work);
+  document.getElementById("statRest").textContent = fmt(config.rest);
+  document.getElementById("statRounds").textContent = config.rounds;
+  // Dots
+  renderDots();
+  // Main button
+  const btn = document.getElementById("mainBtn");
+  if (state.phase === "idle" || state.phase === "done") {
+    btn.textContent = state.phase === "done" ? "REPETIR" : "INICIAR";
+    btn.style.background = "#FF3B30"; btn.style.color = "#fff";
+    btn.style.boxShadow = "0 0 30px rgba(255,59,48,0.4)";
+  } else if (running) {
+    btn.textContent = "PAUSA";
+    btn.style.background = "rgba(255,255,255,0.08)"; btn.style.color = "#fff";
+    btn.style.boxShadow = "none"; btn.style.border = "1px solid rgba(255,255,255,0.15)";
+  } else {
+    btn.textContent = "CONTINUAR";
+    btn.style.background = "#34C759"; btn.style.color = "#000";
+    btn.style.boxShadow = "0 0 30px rgba(52,199,89,0.4)"; btn.style.border = "none";
+  }
+  // Config inputs
+  document.getElementById("cfgWork").textContent = config.work;
+  document.getElementById("cfgRest").textContent = config.rest;
+  document.getElementById("cfgRounds").textContent = config.rounds;
+}
+
+function tick() {
+  if (state.timeLeft > 1) {
+    if ((state.phase === "work" || state.phase === "rest") && state.timeLeft <= 4 && state.timeLeft > 1) beep(880, 0.12);
+    state.timeLeft--;
+  } else {
+    if (state.phase === "work") {
+      if (state.round >= config.rounds) {
+        beep(1047, 0.4);
+        setTimeout(() => beep(1319, 0.4), 200);
+        state.phase = "done";
+        clearInterval(interval); running = false;
+      } else {
+        beepRest();
+        state.phase = "rest";
+        state.timeLeft = config.rest;
+      }
+    } else if (state.phase === "rest") {
+      beep(880, 2.0);
+      state.phase = "work";
+      state.timeLeft = config.work;
+      state.round++;
+    }
+  }
+  updateUI();
+}
+
+function handleMain() {
+  if (state.phase === "done") handleReset();
+  // Inicializar AudioContext en gesto del usuario (necesario en iOS)
+  getAudioCtx();
+  if (state.phase === "idle") {
+    state.phase = "work";
+    state.timeLeft = config.work;
+    beep(880, 2.0);
+    running = true;
+    interval = setInterval(tick, 1000);
+  } else if (running) {
+    clearInterval(interval); running = false;
+  } else {
+    running = true;
+    interval = setInterval(tick, 1000);
+  }
+  updateUI();
+}
+
+function handleReset() {
+  clearInterval(interval); running = false;
+  state = { phase: "idle", timeLeft: config.work, round: 1 };
+  updateUI();
+}
+
+function selectPreset(name) {
+  if (running) return;
+  activePreset = name;
+  const p = PRESETS.find(x => x.name === name);
+  if (name !== "Custom") {
+    config = { work: p.work, rest: p.rest, rounds: p.rounds };
+  }
+  handleReset();
+  renderPresets();
+  if (name === "Custom") {
+    document.getElementById("configPanel").classList.add("open");
+    document.querySelector(".config-toggle").textContent = "▲ OCULTAR CONFIG";
+  }
+}
+
+function adjust(key, delta) {
+  if (running) return;
+  const min = key === "rounds" ? 1 : 5;
+  config[key] = Math.max(min, config[key] + delta);
+  if (state.phase === "idle") state.timeLeft = config.work;
+  updateUI();
+}
+
+function toggleConfig() {
+  const panel = document.getElementById("configPanel");
+  const btn = document.querySelector(".config-toggle");
+  panel.classList.toggle("open");
+  btn.textContent = panel.classList.contains("open") ? "▲ OCULTAR CONFIG" : "▼ CONFIGURAR";
+}
+
+// Init
+renderPresets();
+updateUI();
+
+// Registrar Service Worker para PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js');
+  });
+}
+</script>
+</body>
+</html>
