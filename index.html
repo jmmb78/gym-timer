@@ -157,6 +157,17 @@
   </div>
 </div>
 
+<div class="stats">
+  <div class="stat-box">
+    <div class="stat-label">DURACIÓN TOTAL</div>
+    <div class="stat-val" style="color:#FF9500" id="statTotal">08:00</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-label">TIEMPO RESTANTE</div>
+    <div class="stat-val" style="color:#BF5AF2" id="statRemaining">08:00</div>
+  </div>
+</div>
+
 <div class="controls">
   <button class="btn-main" id="mainBtn" onclick="handleMain()"
     style="background:#FF3B30;color:#fff;box-shadow:0 0 30px rgba(255,59,48,0.4)">
@@ -324,6 +335,21 @@ function updateUI() {
   document.getElementById("statWork").textContent = fmt(config.work);
   document.getElementById("statRest").textContent = fmt(config.rest);
   document.getElementById("statRounds").textContent = config.rounds;
+  // Total y restante
+  const totalSecs = (config.work + config.rest) * config.rounds - config.rest;
+  document.getElementById("statTotal").textContent = fmt(totalSecs);
+  let remaining;
+  if (state.phase === "idle") {
+    remaining = totalSecs;
+  } else if (state.phase === "done") {
+    remaining = 0;
+  } else {
+    const roundsLeft = config.rounds - state.round;
+    const restLeft = state.phase === "rest" ? state.timeLeft : 0;
+    const workLeft = state.phase === "work" ? state.timeLeft : config.work;
+    remaining = workLeft + restLeft + roundsLeft * (config.work + config.rest) - (roundsLeft > 0 ? config.rest : 0);
+  }
+  document.getElementById("statRemaining").textContent = fmt(Math.max(0, remaining));
   // Dots
   renderDots();
   // Main button
