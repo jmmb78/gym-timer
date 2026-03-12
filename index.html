@@ -10,13 +10,28 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.png">
 <title>GYM TIMER PRO</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Fuentes del sistema iOS como fallback offline */
+  :root {
+    --font-display: 'Bebas Neue', 'Arial Narrow', 'Impact', ui-sans-serif, sans-serif;
+    --font-mono: 'DM Mono', 'Courier New', ui-monospace, monospace;
+  }
+</style>
+<script>
+  // Carga fuentes de Google solo si hay conexión
+  if (navigator.onLine) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap';
+    document.head.appendChild(link);
+  }
+</script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     min-height: 100vh;
     background: #0a0a0a;
-    font-family: 'Bebas Neue', Impact, sans-serif;
+    font-family: var(--font-display);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -24,7 +39,7 @@
     background-image: radial-gradient(ellipse at 50% 0%, rgba(255,59,48,0.08) 0%, transparent 60%);
     color: #fff;
   }
-  button { cursor: pointer; border: none; outline: none; font-family: 'Bebas Neue', sans-serif; }
+  button { cursor: pointer; border: none; outline: none; font-family: var(--font-display); }
   input[type=number] { -moz-appearance: textfield; }
   input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; }
 
@@ -34,7 +49,7 @@
   .fade-in { animation: fadeIn 0.3s ease; }
 
   .header { text-align: center; margin-bottom: 24px; }
-  .header-sub { font-size: 11px; letter-spacing: 6px; color: #636366; font-family: 'DM Mono', monospace; margin-bottom: 4px; }
+  .header-sub { font-size: 11px; letter-spacing: 6px; color: #636366; font-family: var(--font-mono); margin-bottom: 4px; }
   .header-title { font-size: 38px; letter-spacing: 4px; color: #fff; line-height: 1; }
 
   .presets { display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; justify-content: center; }
@@ -49,9 +64,9 @@
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     border-radius: 50%; transition: background 0.4s ease;
   }
-  .phase-label { font-size: 11px; letter-spacing: 5px; font-family: 'DM Mono', monospace; margin-bottom: 4px; transition: color 0.4s; }
+  .phase-label { font-size: 11px; letter-spacing: 5px; font-family: var(--font-mono); margin-bottom: 4px; transition: color 0.4s; }
   .time-display { font-size: 72px; color: #fff; line-height: 1; letter-spacing: 2px; }
-  .round-info { font-size: 13px; color: #636366; font-family: 'DM Mono', monospace; margin-top: 6px; }
+  .round-info { font-size: 13px; color: #636366; font-family: var(--font-mono); margin-top: 6px; }
 
   .dots { display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; justify-content: center; }
   .dot { border-radius: 50%; transition: all 0.3s; }
@@ -61,7 +76,7 @@
     background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
     border-radius: 10px; padding: 12px 18px; text-align: center; min-width: 80px;
   }
-  .stat-label { font-size: 9px; letter-spacing: 3px; color: #636366; font-family: 'DM Mono', monospace; margin-bottom: 4px; }
+  .stat-label { font-size: 9px; letter-spacing: 3px; color: #636366; font-family: var(--font-mono); margin-bottom: 4px; }
   .stat-val { font-size: 24px; letter-spacing: 2px; }
 
   .controls { display: flex; gap: 12px; margin-bottom: 20px; }
@@ -78,7 +93,7 @@
 
   .config-toggle {
     background: none; color: #636366; font-size: 11px;
-    letter-spacing: 3px; font-family: 'DM Mono', monospace; margin-bottom: 12px;
+    letter-spacing: 3px; font-family: var(--font-mono); margin-bottom: 12px;
   }
   .config-panel {
     background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
@@ -87,16 +102,16 @@
   }
   .config-panel.open { display: block; }
   .config-row { margin-bottom: 14px; }
-  .config-label { font-size: 10px; letter-spacing: 3px; color: #636366; font-family: 'DM Mono', monospace; margin-bottom: 6px; }
+  .config-label { font-size: 10px; letter-spacing: 3px; color: #636366; font-family: var(--font-mono); margin-bottom: 6px; }
   .config-controls { display: flex; align-items: center; gap: 10px; }
   .config-btn {
-    width: 36px; height: 36px; border-radius: 8px; background: rgba(255,255,255,0.05);
-    color: #fff; font-size: 18px; border: 1px solid rgba(255,255,255,0.1);
+    width: 56px; height: 56px; border-radius: 10px; background: rgba(255,255,255,0.05);
+    color: #fff; font-size: 28px; border: 1px solid rgba(255,255,255,0.1);
   }
   .config-val {
     flex: 1; background: rgba(255,255,255,0.05); border-radius: 8px;
     color: inherit; font-size: 24px; text-align: center; padding: 6px;
-    font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px;
+    font-family: var(--font-display); letter-spacing: 2px;
     pointer-events: none; border: 1px solid transparent;
   }
 </style>
